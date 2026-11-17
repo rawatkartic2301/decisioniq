@@ -13,11 +13,21 @@ from decisioniq.guardrails.injection_shield import (
     wrap_untrusted_context,
 )
 from decisioniq.llm.factory import get_chat_model
+from decisioniq.ml.intent_classifier import IntentClassifier
 from decisioniq.tools.anomaly_tool import TimesheetAnomalyTool
 from decisioniq.tools.retriever_tool import DocRetrieverTool
 from decisioniq.tools.sql_tool import SQLQueryTool
 
 logger = logging.getLogger(__name__)
+
+_INTENT_CLASSIFIER_INSTANCE = None
+
+
+def get_intent_classifier() -> IntentClassifier:
+    global _INTENT_CLASSIFIER_INSTANCE
+    if _INTENT_CLASSIFIER_INSTANCE is None:
+        _INTENT_CLASSIFIER_INSTANCE = IntentClassifier()
+    return _INTENT_CLASSIFIER_INSTANCE
 
 
 # -------------------------------------------------------------
@@ -26,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 def classify_intent_node(state: AgentState) -> Dict[str, Any]:
-    """Classify user intent into policy_rag, sql_analytics, hybrid_doc_sql, anomaly_detection, unanswerable, or adversarial."""
+    """Classify user intent using trained Scikit-Learn router with confidence threshold fallback."""
     query = state["query"]
 
     # 1. Immediate adversarial check
@@ -37,63 +47,27 @@ def classify_intent_node(state: AgentState) -> Dict[str, Any]:
             "intent_confidence": 0.99,
         }
 
-    lowered = query.lower()
+    # 2. Scikit-learn TF-IDF + LogisticRegression router
+    try:
+        clf = get_intent_classifier()
+        predicted_intent, confidence = clf.predict_with_confidence(query)
+        logger.info(
+            "ML Intent Classifier: '%s' -> %s (conf: %.3f)", query, predicted_intent, confidence
+        )
 
-    # Rule-based fast routing
-    is_anomaly = any(
-        w in lowered for w in ["anomal", "irregular", "fraud", "impossible hour", "spike"]
-    )
-    is_sql = any(
-        w in lowered
-        for w in ["how many", "count", "average", "total", "sum", "highest", "list all employees"]
-    )
-    is_doc = any(
-        w in lowered
-        for w in [
-            "policy",
-            "rule",
-            "guideline",
-            "overtime",
-            "leave",
-            "per diem",
-            "allowance",
-            "notice period",
-            "probation",
-        ]
-    )
+        # High confidence prediction above multi-class threshold (6 classes, baseline 0.16)
+        if confidence >= 0.28:
+            return {
+                "intent": predicted_intent,
+                "intent_confidence": confidence,
+            }
+        logger.info(
+            "Low router confidence (%.3f < 0.28). Falling back to LLM intent routing.", confidence
+        )
+    except Exception as e:
+        logger.warning("Intent classifier error (%s). Falling back to LLM.", e)
 
-    # Unanswerable out-of-domain signals
-    is_out_of_domain = any(
-        w in lowered
-        for w in [
-            "pet insurance",
-            "gym",
-            "broadband",
-            "scooter",
-            "tesla",
-            "mount everest",
-            "antarctica",
-            "bitcoin",
-            "scuba",
-        ]
-    )
-
-    if is_out_of_domain:
-        return {"intent": "unanswerable", "intent_confidence": 0.95}
-
-    if is_anomaly:
-        return {"intent": "anomaly_detection", "intent_confidence": 0.90}
-
-    if is_doc and is_sql:
-        return {"intent": "hybrid_doc_sql", "intent_confidence": 0.88}
-
-    if is_sql and not is_doc:
-        return {"intent": "sql_analytics", "intent_confidence": 0.85}
-
-    if is_doc:
-        return {"intent": "policy_rag", "intent_confidence": 0.85}
-
-    # Fallback to LLM classifier
+    # 3. LLM Intent Fallback
     llm = get_chat_model(settings)
     prompt = (
         "Classify the following query into exactly one of: "

@@ -102,11 +102,52 @@ class MockChatModel(BaseChatModel):
         # Context-aware deterministic rule fallbacks for testing agent nodes
         lowered = prompt_text.lower()
         if "classify" in lowered or "intent" in lowered:
-            if "overtime" in lowered or "leave" in lowered or "policy" in lowered:
-                return '{"intent": "policy_rag", "confidence": 0.95}'
-            if "hours" in lowered or "select" in lowered or "sql" in lowered:
+            if any(
+                w in lowered
+                for w in [
+                    "pet",
+                    "cat",
+                    "dog",
+                    "gym",
+                    "scooter",
+                    "tesla",
+                    "everest",
+                    "antarctica",
+                    "bitcoin",
+                    "scuba",
+                ]
+            ):
+                return '{"intent": "unanswerable", "confidence": 0.95}'
+            if any(
+                w in lowered
+                for w in ["override", "admin_key", "compromised", "drop table", "passwords"]
+            ):
+                return '{"intent": "adversarial", "confidence": 0.99}'
+            if any(w in lowered for w in ["anomal", "fraud", "irregular", "spike"]):
+                return '{"intent": "anomaly_detection", "confidence": 0.95}'
+            if any(w in lowered for w in ["overtime rule", "what is the overtime"]) and any(
+                w in lowered for w in ["how many", "hours did", "march"]
+            ):
+                return '{"intent": "hybrid_doc_sql", "confidence": 0.90}'
+            if any(
+                w in lowered
+                for w in [
+                    "how many",
+                    "count",
+                    "average",
+                    "total",
+                    "sum",
+                    "highest",
+                    "employees are based",
+                ]
+            ):
                 return '{"intent": "sql_analytics", "confidence": 0.92}'
-            return '{"intent": "policy_rag", "confidence": 0.85}'
+            if any(
+                w in lowered
+                for w in ["overtime", "leave", "policy", "per diem", "allowance", "probation"]
+            ):
+                return '{"intent": "policy_rag", "confidence": 0.95}'
+            return '{"intent": "policy_rag", "confidence": 0.70}'
 
         if "grounding" in lowered or "hallucination" in lowered:
             return '{"verdict": "GROUNDED", "reasoning": "All statements match provided evidence."}'
