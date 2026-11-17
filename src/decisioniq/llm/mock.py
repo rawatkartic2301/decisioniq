@@ -150,10 +150,43 @@ class MockChatModel(BaseChatModel):
             return '{"intent": "policy_rag", "confidence": 0.70}'
 
         if "grounding" in lowered or "hallucination" in lowered:
+            if any(
+                w in lowered
+                for w in [
+                    "pet",
+                    "cat",
+                    "dog",
+                    "gym",
+                    "scooter",
+                    "tesla",
+                    "everest",
+                    "antarctica",
+                    "bitcoin",
+                    "scuba",
+                ]
+            ):
+                return '{"verdict": "ABSTAIN", "reasoning": "The retrieved documents do not contain policy information on this topic."}'
             return '{"verdict": "GROUNDED", "reasoning": "All statements match provided evidence."}'
 
         if "rewrite" in lowered:
             return "What is the official policy regarding overtime for grade L3 employees?"
+
+        if any(
+            w in lowered
+            for w in [
+                "pet",
+                "cat",
+                "dog",
+                "gym",
+                "scooter",
+                "tesla",
+                "everest",
+                "antarctica",
+                "bitcoin",
+                "scuba",
+            ]
+        ):
+            return "I don't have enough verified information in the official policy documents to answer this question."
 
         return (
             "Based on the official enterprise policy [Doc: overtime_policy_v2#chunk_1], "

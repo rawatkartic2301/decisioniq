@@ -29,10 +29,12 @@ class CrossEncoderReranker:
 
                 from sentence_transformers import CrossEncoder
 
-                # Check if offline mode or test mode is active
+                # Check if offline mode, test mode, or mock LLM mode is active
+                from decisioniq.config import settings
                 if (
                     os.environ.get("HF_HUB_OFFLINE") == "1"
                     or os.environ.get("DECISIONIQ_ENV") == "test"
+                    or settings.llm_provider == "mock"
                 ):
                     try:
                         self._model = CrossEncoder(
@@ -40,6 +42,7 @@ class CrossEncoderReranker:
                         )
                         return self._model
                     except Exception:
+                        logger.info("Local CrossEncoder not cached. Using heuristic reranker.")
                         self.enabled = False
                         return None
 
@@ -47,8 +50,11 @@ class CrossEncoderReranker:
                 try:
                     self._model = CrossEncoder(self.model_name, device="cpu", local_files_only=True)
                 except Exception:
-                    logger.info("Downloading CrossEncoder model: %s", self.model_name)
-                    self._model = CrossEncoder(self.model_name, device="cpu")
+                    try:
+                        self._model = CrossEncoder(self.model_name, device="cpu")
+                    except Exception:
+                        self.enabled = False
+                        return None
             except Exception as e:
                 logger.warning(
                     "Failed to load CrossEncoder (%s). Falling back to heuristic reranking.",

@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: decisioniq-api
+    command: ["uvicorn", "decisioniq.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    environment:
+      - DECISIONIQ_VECTOR_STORE_TYPE=faiss
+      - DECISIONIQ_RETRIEVAL_STRATEGY=hybrid_rerank
+      - DECISIONIQ_LLM_PROVIDER=local_mock
+    volumes:
+      - ./data:/app/data
+      - ./src/decisioniq/ml/saved_models:/app/src/decisioniq/ml/saved_models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: decisioniq-ui
+    command: ["streamlit", "run", "src/decisioniq/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports:
+      - "8501:8501"
+    environment:
+      - DECISIONIQ_VECTOR_STORE_TYPE=faiss
+      - DECISIONIQ_RETRIEVAL_STRATEGY=hybrid_rerank
+      - DECISIONIQ_LLM_PROVIDER=local_mock
+    volumes:
+      - ./data:/app/data
+      - ./src/decisioniq/ml/saved_models:/app/src/decisioniq/ml/saved_models
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
