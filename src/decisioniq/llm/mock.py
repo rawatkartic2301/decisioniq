@@ -171,6 +171,15 @@ class MockChatModel(BaseChatModel):
         if "rewrite" in lowered:
             return "What is the official policy regarding overtime for grade L3 employees?"
 
+        if "select" in lowered and ("table" in lowered or "schema" in lowered or "sqlite" in lowered or "database" in lowered):
+            if "pune" in lowered and ("march" in lowered or "overtime" in lowered):
+                return "SELECT SUM(overtime_hours) AS total_hours FROM timesheets WHERE is_weekend = 1;"
+            if "department" in lowered or "engineering" in lowered:
+                return "SELECT department, count(*) as count FROM employees GROUP BY department;"
+            if "employee" in lowered or "count" in lowered:
+                return "SELECT count(*) FROM employees WHERE location = 'Pune';"
+            return "SELECT count(*) FROM timesheets;"
+
         if any(
             w in lowered
             for w in [
