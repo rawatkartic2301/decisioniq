@@ -92,12 +92,21 @@ class SQLQueryTool:
 
     def execute_query(self, sql_query: str) -> Dict[str, Any]:
         """Execute a SQL string safely through AST guardrail."""
-        rows, validated_sql = self.executor.execute(sql_query)
-        return {
-            "query": validated_sql,
-            "row_count": len(rows),
-            "rows": rows,
-        }
+        try:
+            rows, validated_sql = self.executor.execute(sql_query)
+            return {
+                "query": validated_sql,
+                "row_count": len(rows),
+                "rows": rows,
+            }
+        except Exception as e:
+            logger.warning("SQL execution guarded rejection: %s", e)
+            return {
+                "query": sql_query,
+                "row_count": 0,
+                "rows": [],
+                "error": str(e),
+            }
 
     def query(self, question_or_sql: str) -> Dict[str, Any]:
         """Execute question or raw SQL and return structured results."""
