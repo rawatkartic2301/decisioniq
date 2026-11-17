@@ -1,0 +1,42 @@
+# Python & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets & Configuration
+.env
+!.env.example
+
+# Vector Stores & Databases (Local Cache / Indexes)
+*.db
+*.sqlite
+*.sqlite3
+decisioniq_faiss/
+decisioniq_chroma/
+chroma_db/
+
+# MLflow & Experiment Tracking
+mlruns/
+.mlflow/
+
+# Testing & Quality
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# Trained Models / Large Artifacts
+src/decisioniq/ml/saved_models/*.joblib
+*.pkl
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
