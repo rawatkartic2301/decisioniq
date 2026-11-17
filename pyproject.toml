@@ -61,9 +61,13 @@ target-version = "py311"
 select = ["E", "F", "I", "W", "B", "C4"]
 ignore = ["E501", "B008"]
 
+[tool.ruff.lint.per-file-ignores]
+"eval/*" = ["E402", "W291"]
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+pythonpath = [".", "src"]
 asyncio_mode = "auto"
 addopts = "-v --strict-markers --capture=sys"
