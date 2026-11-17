@@ -1,0 +1,9 @@
+{
+  "doc_id": "doc_leave_v1",
+  "title": "Corporate Leave Policy (2022)",
+  "version": 1,
+  "effective_date": "2022-01-01",
+  "department": "HR",
+  "status": "deprecated",
+  "superseded_by": "doc_leave_v2"
+}

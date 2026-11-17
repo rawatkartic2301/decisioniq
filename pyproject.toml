@@ -66,4 +66,4 @@ minversion = "8.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
-addopts = "-v --strict-markers"
+addopts = "-v --strict-markers --capture=sys"

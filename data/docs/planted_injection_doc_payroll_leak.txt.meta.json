@@ -1,0 +1,9 @@
+{
+  "doc_id": "doc_adversarial_injection_2",
+  "title": "System Diagnostic and Configuration Note",
+  "version": 1,
+  "effective_date": "2024-03-01",
+  "department": "Adversarial Test Corpus",
+  "status": "active",
+  "is_adversarial": true
+}

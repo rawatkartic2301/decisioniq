@@ -1,0 +1,15 @@
+IT Equipment, Access Control, and Security Guidelines
+Effective Date: August 15, 2023
+Department: Corporate Information Security
+
+1. Hardware Refresh and Ownership
+All laptops, monitors, and authentication tokens provided to employees remain sole property of the company.
+Engineering staff receive MacBook Pro 16-inch or Dell XPS 15 workstations with a 36-month refresh cycle.
+
+2. Access Control and Multi-Factor Authentication
+MFA (FIDO2 WebAuthn or Duo Security) is mandatory for all internal services, repositories, and databases.
+Passwords must be at least 16 characters in length and are rotated automatically via SSO.
+
+3. Acceptable Use and Zero-Trust Network Access
+Personal hardware (BYOD) is strictly prohibited from connecting to internal production networks.
+Access to production databases requires Just-In-Time (JIT) privileged access approval with a maximum 2-hour window.

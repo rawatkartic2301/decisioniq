@@ -19,6 +19,7 @@ ENV/
 decisioniq_faiss/
 decisioniq_chroma/
 chroma_db/
+data/vectorstores/
 
 # MLflow & Experiment Tracking
 mlruns/
